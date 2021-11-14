@@ -100,8 +100,20 @@ app.post('/api/animals', (req, res) => {
     }
 });
 
-// Send the HTML to the server to be displayed
+// Send the index HTML file to the server to be displayed
 app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, './public/index.html'));
+});
+// Send the animals HTML file to the server to be displayed
+app.get('/animals', (req, res) => {
+    res.sendFile(path.join(__dirname, './public/animals.html'))
+});
+// Send the zookeepers HTML file to the server to be displayed
+app.get('/zookeepers', (req, res) => {
+    res.sendFile(path.join(__dirname, './public/zookeepers.html'))
+});
+// If request is not one of the above, send index HTML to be displayed
+app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, './public/index.html'));
 });
 

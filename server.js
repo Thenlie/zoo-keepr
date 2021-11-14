@@ -9,6 +9,8 @@ const path = require('path');
 app.use(express.urlencoded({ extended: true}));
 // Parse incoming JSON data
 app.use(express.json());
+// Make resources in public dir static so they can be accessed without a specific endpoint
+app.use(express.static('public'));
 
 function filterByQuery(query, animalsArray) {
     let personalityTraitsArray = [];
@@ -96,6 +98,11 @@ app.post('/api/animals', (req, res) => {
         const animal = createNewAnimal(req.body, animals);
         res.json(animal);
     }
+});
+
+// Send the HTML to the server to be displayed
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, './public/index.html'));
 });
 
 app.listen(PORT, () => {

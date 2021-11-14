@@ -1,5 +1,7 @@
 const express = require ('express');
 const { animals } = require ('./data/animals.json');
+const apiRoutes = require('./routes/apiRoutes'); 
+const htmlRoutes = require('./routes/htmlRoutes'); 
 const PORT = process.env.PORT || 3001;
 const app = express();
 const fs = require('fs');
@@ -11,111 +13,10 @@ app.use(express.urlencoded({ extended: true}));
 app.use(express.json());
 // Make resources in public dir static so they can be accessed without a specific endpoint
 app.use(express.static('public'));
-
-function filterByQuery(query, animalsArray) {
-    let personalityTraitsArray = [];
-    let filteredResults = animalsArray;
-    // Ensure personality traits are saved as an array
-    if (query.personalityTraits) {
-        if (typeof query.personalityTraits === 'string') {
-            personalityTraitsArray = [query.personalityTraits];
-        } else {
-            personalityTraitsArray = query.personalityTraits;
-        }
-        // Loop through each personality trait
-        personalityTraitsArray.forEach(trait => {
-            filteredResults = filteredResults.filter(animal => animal.personalityTraits.indexOf(trait) !== -1);
-        });
-    }
-    if (query.diet) {
-        filteredResults = filteredResults.filter(animal => animal.diet === query.diet);
-    }
-    if (query.species) {
-        filteredResults = filteredResults.filter(animal => animal.species === query.species);
-    }
-    if (query.name) {
-        filteredResults = filteredResults.filter(animal => animal.name === query.name);
-    }
-    return filteredResults;
-}
-
-function findById(id, animalsArray) {
-    const result = animalsArray.filter(animal => animal.id === id)[0];
-    return result;
-}
-
-function createNewAnimal(body, animalsArray) {
-    const animal = body;
-    animalsArray.push(animal);
-    fs.writeFileSync(
-        path.join(__dirname, './data/animals.json'),
-        JSON.stringify({ animals: animalsArray }, null, 2)
-    );
-    return animal;
-}
-
-function validateAnimal(animal) {
-    if (!animal.name || typeof animal.name !== 'string') {
-        return false;
-    }
-    if (!animal.species || typeof animal.species !== 'string') {
-        return false;
-    }
-    if (!animal.diet || typeof animal.diet !== 'string') {
-        return false;
-    }
-    if (!animal.personalityTraits || !Array.isArray(animal.personalityTraits)) {
-        return false;
-    }
-    return true;
-}
-
-app.get('/api/animals', (req, res) => {
-    let results = animals;
-    if (req.query) {
-        results = filterByQuery(req.query, results);
-    }
-    res.json(results);
-});
-
-app.get('/api/animals/:id', (req, res) => {
-    const result = findById(req.params.id, animals);
-    if (result) {
-        res.json(result);
-    } else {
-        res.send(404);
-    }
-})
-
-app.post('/api/animals', (req, res) => {
-    // Set ID based on what the next index of the array will be
-    req.body.id = animals.length.toString();
-    if (!validateAnimal(req.body)) {
-        // If any data is incorrect, send back 400 error
-        res.status(400).send('The animal is not properly formatted.');
-    } else {
-        // Add animal to JSON file and animals array
-        const animal = createNewAnimal(req.body, animals);
-        res.json(animal);
-    }
-});
-
-// Send the index HTML file to the server to be displayed
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, './public/index.html'));
-});
-// Send the animals HTML file to the server to be displayed
-app.get('/animals', (req, res) => {
-    res.sendFile(path.join(__dirname, './public/animals.html'))
-});
-// Send the zookeepers HTML file to the server to be displayed
-app.get('/zookeepers', (req, res) => {
-    res.sendFile(path.join(__dirname, './public/zookeepers.html'))
-});
-// If request is not one of the above, send index HTML to be displayed
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, './public/index.html'));
-});
+// Use apiRoutes file for any api calls
+app.use('/api', apiRoutes);
+// Use htmlRoutes for any calls to display pages
+app.use('/', htmlRoutes);
 
 app.listen(PORT, () => {
     console.log(`API server now on port ${PORT}!`);
